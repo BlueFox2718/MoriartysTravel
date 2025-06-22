@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Lecteur de Musique</title>
+  <style>
+    :root {
+      --image-darkness: 0.4; /* ↩️ Changez cette valeur entre 0 (noir) et 1 (pas sombre) */
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background-color: #000;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url("https://github.com/BlueFox2718/MoriartysTravel/raw/refs/heads/main/MoriartysTravelIllustration.png");
+      background-size: cover;
+      background-position: center;
+      z-index: -1;
+      filter: brightness(var(--image-darkness));
+      pointer-events: none;
+    }
+
+    button {
+      position: relative;
+      overflow: hidden;
+      padding: 10px 20px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+      transition: opacity 0.3s ease;
+      color: white;
+    }
+
+    #playButton {
+      background-color: #4CAF50;
+    }
+
+    #playButton:hover {
+      background-color: #45a049;
+    }
+
+    #stopButton {
+      background-color: #2196F3;
+    }
+
+    #stopButton:hover {
+      background-color: #1976D2;
+    }
+
+    #finalButton {
+      background-color: #f44336;
+    }
+
+    #finalButton.loading {
+      cursor: wait;
+      color: #555;
+    }
+
+    #finalButton.loading::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      background-color: #ccc;
+      width: 100%;
+      animation: progressBar 4s linear forwards;
+      z-index: 1;
+    }
+
+    #finalButton span {
+      position: relative;
+      z-index: 2;
+    }
+
+    @keyframes progressBar {
+      from {
+        width: 0%;
+      }
+      to {
+        width: 100%;
+      }
+    }
+
+    .volume-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 8px 16px;
+      border-radius: 10px;
+    }
+
+    input[type="range"] {
+      width: 200px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="playButton"><span>Play musique de fond</span></button>
+  <button id="stopButton" class="hidden"><span>Fin musique de fond</span></button>
+  <button id="finalButton" class="hidden"><span>Musique de Fin</span></button>
+
+  <div class="volume-control">
+    <label for="volumeSlider">Volume :</label>
+    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+  </div>
+
+  <script>
+    const audioFond = new Audio("https://github.com/BlueFox2718/MoriartysTravel/raw/refs/heads/main/MusiqueFond.mp3");
+    audioFond.loop = true;
+    audioFond.volume = 0.5;
+
+    const audioFinale = new Audio("https://github.com/BlueFox2718/MoriartysTravel/raw/refs/heads/main/MusiqueFinale.mp3");
+
+    const playButton = document.getElementById("playButton");
+    const stopButton = document.getElementById("stopButton");
+    const finalButton = document.getElementById("finalButton");
+    const volumeSlider = document.getElementById("volumeSlider");
+
+    playButton.addEventListener("click", () => {
+      if (audioFond.paused) {
+        audioFond.play().then(() => {
+          playButton.classList.add("hidden");
+          stopButton.classList.remove("hidden");
+        }).catch((e) => {
+          alert("Lecture bloquée par le navigateur. Cliquez à nouveau ou vérifiez les autorisations.");
+          console.error(e);
+        });
+      }
+    });
+
+    stopButton.addEventListener("click", () => {
+      const fadeOut = setInterval(() => {
+        if (audioFond.volume > 0.01) {
+          audioFond.volume = Math.max(0, audioFond.volume - 0.02);
+          volumeSlider.value = audioFond.volume.toFixed(2);
+        } else {
+          clearInterval(fadeOut);
+          audioFond.pause();
+          audioFond.currentTime = 0;
+          audioFond.volume = 0.5;
+          volumeSlider.value = 0.5;
+
+          stopButton.classList.add("hidden");
+          finalButton.classList.remove("hidden");
+        }
+      }, 100);
+    });
+
+    finalButton.addEventListener("click", () => {
+      if (finalButton.classList.contains("loading")) return;
+
+      finalButton.classList.add("loading");
+
+      setTimeout(() => {
+        audioFinale.volume = 0.3; // Volume fixe pour musique finale
+        audioFinale.play().catch((e) => {
+          alert("Impossible de lancer la musique de fin.");
+          console.error(e);
+        });
+
+        finalButton.classList.remove("loading");
+        finalButton.classList.add("hidden");
+      }, 4000);
+    });
+
+    volumeSlider.addEventListener("input", (e) => {
+      audioFond.volume = parseFloat(e.target.value);
+    });
+  </script>
+
+</body>
+</html>
